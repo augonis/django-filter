@@ -52,14 +52,14 @@ class FilterTests(TestCase):
         f = Filter(lookup_type=None)
         field = f.field
         self.assertIsInstance(field, LookupTypeField)
-        choice_field = field.fields[1]
+        choice_field = field.fields[0]
         self.assertEqual(len(choice_field.choices), len(LOOKUP_TYPES))
 
     def test_field_with_list_lookup_type(self):
         f = Filter(lookup_type=('istartswith', 'iendswith'))
         field = f.field
         self.assertIsInstance(field, LookupTypeField)
-        choice_field = field.fields[1]
+        choice_field = field.fields[0]
         self.assertEqual(len(choice_field.choices), 2)
 
     def test_field_params(self):
