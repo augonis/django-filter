@@ -482,11 +482,11 @@ class NumberFilterTests(TestCase):
                 fields = ['price']
 
         qs = Book.objects.all()
-        f = F({'price_0': '15', 'price_1': 'lt'}, queryset=qs)
+        f = F({'price_1': '15', 'price_0': 'lt'}, queryset=qs)
         self.assertQuerysetEqual(f.qs, ['Ender\'s Game'], lambda o: o.title)
-        f = F({'price_0': '15', 'price_1': 'lt'})
+        f = F({'price_1': '15', 'price_0': 'lt'})
         self.assertQuerysetEqual(f.qs, ['Ender\'s Game'], lambda o: o.title)
-        f = F({'price_0': '', 'price_1': 'lt'})
+        f = F({'price_1': '', 'price_0': 'lt'})
         self.assertQuerysetEqual(f.qs,
                                  ['Ender\'s Game', 'Rainbow Six', 'Snowcrash'],
                                  lambda o: o.title, ordered=False)
@@ -498,7 +498,7 @@ class NumberFilterTests(TestCase):
                 model = Book
                 fields = ['price']
 
-        f = F({'price_0': '15'})
+        f = F({'price_1': '15'})
         self.assertQuerysetEqual(f.qs, ['Rainbow Six'], lambda o: o.title)
 
 

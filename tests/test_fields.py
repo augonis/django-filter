@@ -48,7 +48,7 @@ class LookupTypeFieldTests(TestCase):
         inner = forms.DecimalField()
         f = LookupTypeField(inner, [('gt', 'gt'), ('lt', 'lt')])
         self.assertEqual(
-            f.clean(['12.34', 'lt']),
+            f.clean(['lt', '12.34']),
             Lookup(to_d(12.34), 'lt'))
 
     @unittest.skipIf(django.VERSION >= (1, 6),
@@ -57,17 +57,17 @@ class LookupTypeFieldTests(TestCase):
         inner = forms.DecimalField()
         f = LookupTypeField(inner, [('gt', 'gt'), ('lt', 'lt')])
         self.assertHTMLEqual(f.widget.render('price', ''), """
-            <input type="text" name="price_0" />
-            <select name="price_1">
+            <select name="price_0">
                 <option value="gt">gt</option>
                 <option value="lt">lt</option>
-            </select>""")
-        self.assertHTMLEqual(f.widget.render('price', ['abc', 'lt']), """
-            <input type="text" name="price_0" value="abc" />
-            <select name="price_1">
+            </select>
+            <input type="text" name="price_1" />""")
+        self.assertHTMLEqual(f.widget.render('price', ['lt', 'abc']), """
+            <select name="price_0">
                 <option value="gt">gt</option>
                 <option selected="selected" value="lt">lt</option>
-            </select>""")
+            </select>
+            <input type="text" name="price_1" value="abc" />""")
 
     @unittest.skipUnless(django.VERSION >= (1, 6),
                          'Django 1.6 uses html5 fields')
