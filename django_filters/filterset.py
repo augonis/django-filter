@@ -227,6 +227,7 @@ FILTER_FOR_DBFIELD_DEFAULTS = {
 class BaseFilterSet(object):
     filter_overrides = {}
     order_by_field = ORDER_BY_FIELD
+    order_by_field_class = forms.ChoiceField
     strict = True
 
     def __init__(self, data=None, queryset=None, prefix=None, strict=None):
@@ -340,7 +341,7 @@ class BaseFilterSet(object):
                         (fltr.name or f, fltr.label or capfirst(f)),
                         ("-%s" % (fltr.name or f), _('%s (descending)' % (fltr.label or capfirst(f))))
                     ])
-            return forms.ChoiceField(label="Ordering", required=False,
+            return self.order_by_field_class(label="Ordering", required=False,
                                      choices=choices)
 
     @property
