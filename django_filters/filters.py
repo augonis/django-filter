@@ -24,11 +24,37 @@ __all__ = [
 
 
 LOOKUP_TYPES = sorted(QUERY_TERMS)
-
+VERBOSE_LOOKUP_TYPES = {
+        'contains':_('contains'),
+        'day':_('day'),
+        'endswith':_('ends with'),
+        'exact':_('is'),
+        'gt':_('grater than'),
+        'gte':_('grater or equal than'),
+        'icontains':_('contains (ci)'),
+        'iendswith':_('ends with (ci)'),
+        'iexact':_('is (ci)'),
+        'in':_('in'),
+        'iregex':_('regex (ci)'),
+        'isnull':_('is null'),
+        'istartswith':_('starts with (ci)'),
+        'lt':_('less than'),
+        'lte':_('less or equal than'),
+        'month':_('month'),
+        'range':_('range'),
+        'regex':_('regex'),
+        'search':_('search'),
+        'startswith':_('starts with'),
+        'week_day':_('week day'),
+        'year':_('year'),
+        }
 
 class Filter(object):
     creation_counter = 0
     field_class = forms.Field
+    
+    DEFAULT_LOOKUP_TYPES = LOOKUP_TYPES
+    DEFAULT_VERBOSE_LOOKUP_TYPES = VERBOSE_LOOKUP_TYPES
 
     def __init__(self, name=None, label=None, widget=None, action=None,
         lookup_type='exact', required=False, distinct=False, exclude=False, **kwargs):
@@ -53,10 +79,9 @@ class Filter(object):
             if (self.lookup_type is None or
                     isinstance(self.lookup_type, (list, tuple))):
                 if self.lookup_type is None:
-                    lookup = [(x, x) for x in LOOKUP_TYPES]
+                    lookup = [(x, self.DEFAULT_VERBOSE_LOOKUP_TYPES.get(x, x)) for x in self.DEFAULT_LOOKUP_TYPES]
                 else:
-                    lookup = [
-                        (x, x) for x in LOOKUP_TYPES if x in self.lookup_type]
+                    lookup = [(x, self.DEFAULT_VERBOSE_LOOKUP_TYPES.get(x, x)) for x in self.DEFAULT_LOOKUP_TYPES if x in self.lookup_type]
                 self._field = LookupTypeField(self.field_class(
                     required=self.required, widget=self.widget, **self.extra),
                     lookup, required=self.required, label=self.label, help_text=help_text)
