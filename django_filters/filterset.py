@@ -164,16 +164,20 @@ def get_full_clean_override(together):
 
 class FilterSetOptions(object):
     def __init__(self, options=None):
-        self.model = getattr(options, 'model', None)
-        self.fields = getattr(options, 'fields', None)
-        self.exclude = getattr(options, 'exclude', None)
-
-        self.order_by = getattr(options, 'order_by', False)
-
-        self.form = getattr(options, 'form', forms.Form)
+        self.update(options)
+    
+    def _setOption(self, options, name, default=None):
+        setattr(self, name, getattr(options, name, None) or getattr(self, name, default))
+    
+    def update(self, options=None):
+        self._setOption(options, 'model')
+        self._setOption(options, 'fields')
+        self._setOption(options, 'exclude')
         
-        self.together = getattr(options, 'together', None)
-
+        self._setOption(options, 'order_by')
+        
+        self._setOption(options, 'form', default=forms.Form)
+        self._setOption(options, 'together')
 
 class FilterSetMetaclass(type):
     def __new__(cls, name, bases, attrs):
@@ -181,16 +185,23 @@ class FilterSetMetaclass(type):
             parents = [b for b in bases if issubclass(b, FilterSet)]
         except NameError:
             # We are defining FilterSet itself here
-            parents = None
+            parents = []
         declared_filters = get_declared_filters(bases, attrs, False)
+        
+        opts = FilterSetOptions()
+        for parent in parents:
+            opts.update(parent._meta)
+        opts.update(attrs.pop('Meta', None))
+        
         new_class = super(
             FilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
 
+       
+        new_class._meta = opts
+        
         if not parents:
             return new_class
-
-        opts = new_class._meta = FilterSetOptions(
-            getattr(new_class, 'Meta', None))
+        
         if opts.model:
             filters = filters_for_model(opts.model, opts.fields, opts.exclude,
                                         new_class.filter_for_field,
@@ -418,7 +429,6 @@ class BaseFilterSet(object):
                         (fltr.name or f, fltr.label or capfirst(f)),
                         ("-%s" % (fltr.name or f), _('%s (descending)' % (fltr.label or capfirst(f))))
                     ])
-            return forms.ChoiceField(label=_("Ordering"), required=False,
             return self.order_by_field_class(label="Ordering", required=False,
                                      choices=choices)
 
