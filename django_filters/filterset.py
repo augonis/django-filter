@@ -439,6 +439,7 @@ class BaseFilterSet(object):
         return self._ordering_field
 
     def get_order_by(self, order_choice):
+        if isinstance(order_choice, (list, tuple)): return order_choice
         return [order_choice]
 
     @classmethod
