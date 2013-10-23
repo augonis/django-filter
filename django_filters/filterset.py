@@ -110,6 +110,10 @@ class FilterSetOptions(object):
         self._setOption(options, 'form', default=forms.Form)
     
 
+class FilterSetFormMixin():
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = self.base_fields
 
 class FilterSetMetaclass(type):
     def __new__(cls, name, bases, attrs):
@@ -127,9 +131,11 @@ class FilterSetMetaclass(type):
         
         new_class = super(
             FilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
-
        
         new_class._meta = opts
+        
+        #new_class._meta.form = type(str('%sForm' % name), (new_class._meta.form,), {})
+        
         
         if not parents:
             return new_class
@@ -330,7 +336,7 @@ class BaseFilterSet(object):
                 for name, filter_ in six.iteritems(self.filters)])
             fields[self.order_by_field] = self.ordering_field
             Form = type(str('%sForm' % self.__class__.__name__),
-                        (self._meta.form,), fields)
+                        (FilterSetFormMixin, self._meta.form), fields)
             if self.is_bound:
                 self._form = Form(self.data, prefix=self.form_prefix)
             else:
@@ -417,8 +423,6 @@ class BaseFilterSet(object):
 
 class FilterSet(six.with_metaclass(FilterSetMetaclass, BaseFilterSet)):
     pass
-
-print(FilterSet._meta)
 
 def filterset_factory(model):
     meta = type(str('Meta'), (object,), {'model': model})

@@ -66,10 +66,14 @@ class Filter(object):
         self.required = required
         self.extra = kwargs
         self.distinct = distinct
+        self._is_used = False
 
         self.creation_counter = Filter.creation_counter
         Filter.creation_counter += 1
 
+    def _set_is_used(self, val):self._is_used = self.field.is_used = val
+    is_used = property(lambda self: self._is_used, _set_is_used)
+    
     @property
     def field(self):
         if not hasattr(self, '_field'):
@@ -98,6 +102,7 @@ class Filter(object):
         qs = qs.filter(**{'%s__%s' % (self.name, lookup): value})
         if self.distinct:
             qs = qs.distinct()
+        self.is_used = True
         return qs
 
 
@@ -131,6 +136,7 @@ class MultipleChoiceFilter(Filter):
         q = Q()
         for v in value:
             q |= Q(**{self.name: v})
+        self.is_used = True
         return qs.filter(q).distinct()
 
 
@@ -164,6 +170,7 @@ class RangeFilter(Filter):
     def filter(self, qs, value):
         if value:
             lookup = '%s__range' % self.name
+            self.is_used = True
             return qs.filter(**{lookup: (value.start, value.stop)})
         return qs
 
@@ -200,6 +207,7 @@ class DateRangeFilter(ChoiceFilter):
     def filter(self, qs, value):
         try:
             value = int(value)
+            self.is_used = True
         except (ValueError, TypeError):
             value = ''
         return self.options[value][1](qs, self.name)
