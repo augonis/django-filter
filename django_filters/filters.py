@@ -115,6 +115,7 @@ class BooleanFilter(Filter):
 
     def filter(self, qs, value):
         if value is not None:
+            self.is_used = True
             return qs.filter(**{self.name: value})
         return qs
 
