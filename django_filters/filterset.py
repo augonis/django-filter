@@ -385,6 +385,7 @@ class BaseFilterSet(object):
                     ordered_value = self.form.fields[self.order_by_field].choices[0][0]
 
                 if ordered_value:
+                    order_field.is_used = True
                     qs = qs.order_by(*self.get_order_by(ordered_value))
 
             self._qs = qs
