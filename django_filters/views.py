@@ -18,12 +18,14 @@ class FilterMixin(object):
         Returns the filterset class to use in this view
         """
         if self.filterset_class:
+            self.model = self.filterset_class._meta.model
             return self.filterset_class
         elif self.model:
             return filterset_factory(self.model)
         else:
             msg = "'%s' must define 'filterset_class' or 'model'"
             raise ImproperlyConfigured(msg % self.__class__.__name__)
+        
 
     def get_filterset(self, filterset_class):
         """
