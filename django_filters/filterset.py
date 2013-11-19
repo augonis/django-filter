@@ -164,20 +164,24 @@ def get_full_clean_override(together):
 
 class FilterSetOptions(object):
     def __init__(self, options=None):
+        self.update({'form':forms.Form, 'model':None, 'fields':None, 'exclude':None, 'order_by':False, 'together':None})#defaults
         self.update(options)
     
     def _setOption(self, options, name, default=None):
         setattr(self, name, getattr(options, name, None) or getattr(self, name, default))
     
-    def update(self, options=None):
-        self._setOption(options, 'model')
-        self._setOption(options, 'fields')
-        self._setOption(options, 'exclude')
-        
-        self._setOption(options, 'order_by')
-        
-        self._setOption(options, 'form', default=forms.Form)
-        self._setOption(options, 'together')
+    def update(self, options):
+        if not options: return
+        if not hasattr(options, 'items'):
+            options = {k:v for k, v in options.__dict__.items() if k[0]!='_'}
+        for option, val in options.items():
+            setattr(self, option, val)
+
+
+class FilterSetFormMixin():
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields = self.base_fields
 
 class FilterSetMetaclass(type):
     def __new__(cls, name, bases, attrs):
@@ -190,7 +194,7 @@ class FilterSetMetaclass(type):
         
         opts = FilterSetOptions()
         for parent in parents:
-            opts.update(parent._meta)
+            opts.update(parent._meta.__dict__)
         opts.update(attrs.pop('Meta', None))
         
         new_class = super(
@@ -403,7 +407,7 @@ class BaseFilterSet(object):
                 for name, filter_ in six.iteritems(self.filters)])
             fields[self.order_by_field] = self.ordering_field
             Form = type(str('%sForm' % self.__class__.__name__),
-                        (self._meta.form,), fields)
+                        (FilterSetFormMixin, self._meta.form), fields)
             if self._meta.together:
                 Form.full_clean = get_full_clean_override(self._meta.together)
             if self.is_bound:
@@ -493,7 +497,6 @@ class BaseFilterSet(object):
 
 class FilterSet(six.with_metaclass(FilterSetMetaclass, BaseFilterSet)):
     pass
-
 
 def filterset_factory(model):
     meta = type(str('Meta'), (object,), {'model': model})
