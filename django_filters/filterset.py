@@ -95,20 +95,15 @@ def filters_for_model(model, fields=None, exclude=None, filter_for_field=None,
 
 class FilterSetOptions(object):
     def __init__(self, options=None):
+        self.update({'form':forms.Form, 'model':None, 'fields':None, 'exclude':None, 'order_by':False})#defaults
         self.update(options)
     
-    def _setOption(self, options, name, default=None):
-        setattr(self, name, getattr(options, name, None) or getattr(self, name, default))
-    
-    def update(self, options=None):
-        self._setOption(options, 'model')
-        self._setOption(options, 'fields')
-        self._setOption(options, 'exclude')
-        
-        self._setOption(options, 'order_by')
-        
-        self._setOption(options, 'form', default=forms.Form)
-    
+    def update(self, options):
+        if not options: return
+        if not hasattr(options, 'items'):
+            options = {k:v for k, v in options.__dict__.items() if k[0]!='_'}
+        for option, val in options.items():
+            setattr(self, option, val)
 
 class FilterSetFormMixin():
     def __init__(self, *args, **kwargs):
@@ -126,7 +121,7 @@ class FilterSetMetaclass(type):
         
         opts = FilterSetOptions()
         for parent in parents:
-            opts.update(parent._meta)
+            opts.update(parent._meta.__dict__)
         opts.update(attrs.pop('Meta', None))
         
         new_class = super(
