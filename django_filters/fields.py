@@ -5,7 +5,7 @@ from collections import namedtuple
 
 from django import forms
 
-from .widgets import RangeWidget, LookupTypeWidget
+from .widgets import RangeWidget, LookupTypeWidget, BooleanSelect, DateOffsetWidget
 
 
 class RangeField(forms.MultiValueField):
@@ -41,3 +41,17 @@ class LookupTypeField(forms.MultiValueField):
         if len(data_list)==2:
             return Lookup(value=data_list[1], lookup_type=data_list[0] or 'exact')
         return Lookup(value=None, lookup_type='exact')
+
+
+class BooleanField(forms.NullBooleanField):
+    widget = BooleanSelect
+
+class DateOffsetField(forms.Field):
+    widget = DateOffsetWidget
+    def to_python(self, value):
+        if value:
+            return int(value[0]), int(value[1])
+    
+    def validate(self, value):
+        pass
+    

@@ -19,7 +19,7 @@ except ImportError:  # pragma: nocover
     # Django < 1.5 fallback
     from django.db.models.sql.constants import LOOKUP_SEP  # noqa
 
-from .filters import (Filter, CharFilter, BooleanFilter,
+from .filters import (Filter, CharFilter, BooleanFilter, NullBooleanFilter,
     ChoiceFilter, DateFilter, DateTimeFilter, TimeFilter, ModelChoiceFilter,
     ModelMultipleChoiceFilter, NumberFilter)
 
@@ -127,7 +127,7 @@ class FilterSetMetaclass(type):
         new_class = super(
             FilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
        
-        new_class._meta = opts
+        new_class._meta = new_class.Meta = opts
         
         #new_class._meta.form = type(str('%sForm' % name), (new_class._meta.form,), {})
         
@@ -221,7 +221,7 @@ FILTER_FOR_DBFIELD_DEFAULTS = {
         'filter_class': NumberFilter,
     },
     models.NullBooleanField: {
-        'filter_class': BooleanFilter,
+        'filter_class': NullBooleanFilter,
     },
     models.SlugField: {
         'filter_class': CharFilter,
@@ -309,17 +309,16 @@ class BaseFilterSet(object):
             if self._meta.order_by:
                 order_field = self.form.fields[self.order_by_field]
                 data = self.form[self.order_by_field].data
-                ordered_value = None
                 try:
                     ordered_value = order_field.clean(data)
                 except forms.ValidationError:
-                    pass
-
+                    ordered_value = None
+                
+                order_field.is_used = bool(ordered_value)
                 if ordered_value in EMPTY_VALUES and self.strict:
                     ordered_value = self.form.fields[self.order_by_field].choices[0][0]
 
                 if ordered_value:
-                    order_field.is_used = True
                     qs = qs.order_by(*self.get_order_by(ordered_value))
 
             self._qs = qs
@@ -386,8 +385,10 @@ class BaseFilterSet(object):
         }
 
         if f.choices:
-            default['choices'] = f.choices
-            return ChoiceFilter(**default)
+            if f.null:
+                default['choices'] = [('', 'unset')]
+            default.setdefault('choices', []).extend(f.choices)
+            return cls.filterForChoices(**default)
 
         data = filter_for_field.get(f.__class__)
         if data is None:
