@@ -210,6 +210,11 @@ class FilterSetMetaclass(type):
             filters = filters_for_model(opts.model, opts.fields, opts.exclude,
                                         new_class.filter_for_field,
                                         new_class.filter_for_reverse_field)
+            
+            for k,v in declared_filters.items():
+                if v.extra.get('choices', '')=='inherit':
+                    v.extra['choices']=filters[v.name].extra['choices']
+            
             filters.update(declared_filters)
         else:
             filters = declared_filters
