@@ -97,3 +97,54 @@ class LookupTypeWidget(forms.MultiWidget):
         if value is None:
             return [None, None]
         return value
+
+class BooleanSelect(forms.Select):
+    """
+    A Select Widget intended to be used with NullBooleanField.
+    """
+    def __init__(self, attrs=None):
+        choices = (('', _('Any')),
+                   ('2', _('Yes')),
+                   ('3', _('No')))
+        super(BooleanSelect, self).__init__(attrs, choices)
+
+    def render(self, name, value, attrs=None, choices=()):
+        try:
+            value = {True: '2', False: '3', '2': '2', '3': '3'}[value]
+        except KeyError:
+            value = '1'
+        return super(BooleanSelect, self).render(name, value, attrs, choices)
+
+    def value_from_datadict(self, data, files, name):
+        value = data.get(name, None)
+        return {'2': True,
+                True: True,
+                'True': True,
+                '3': False,
+                'False': False,
+                False: False}.get(value, None)
+
+class DateOffsetWidget(forms.Select):
+    directions = {'past':_('last'), 'future':_('next')}
+    def __init__(self, attrs=None, direction='past'):
+        choices = ('', _('unit')), (1, _('days')), (7, _('weeks')), (30, _('months')), (365, _('years'))
+        self.direction = direction
+        super(DateOffsetWidget, self).__init__(attrs, choices)
+    
+    def render(self, name, value, attrs=None, choices=()):
+        output=['<span>%s</span>'%(self.directions[self.direction].capitalize())]
+        output.append('<input placeholder="number" type="number" name="%s_n"/>'%name)
+        output.append(super().render("%s_m"%name, value, attrs=attrs))
+        
+        return mark_safe('\n'.join(output))
+    
+    
+    def value_from_datadict(self, data, files, name):
+        
+        number = data.get("%s_n"%name, None)
+        multiplier = data.get("%s_m"%name, None)
+        if number and multiplier:
+            return number, multiplier
+        
+    
+

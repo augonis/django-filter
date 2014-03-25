@@ -11,7 +11,8 @@ from django.utils import six
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from .fields import RangeField, LookupTypeField, Lookup
+from .fields import RangeField, LookupTypeField, Lookup, BooleanField, DateOffsetField
+import django_filters.widgets as widgets
 
 
 __all__ = [
@@ -111,13 +112,21 @@ class CharFilter(Filter):
 
 
 class BooleanFilter(Filter):
-    field_class = forms.NullBooleanField
+    field_class = BooleanField
 
     def filter(self, qs, value):
         if value is not None:
             return qs.filter(**{self.name: value})
         return qs
 
+class NullBooleanFilter(Filter):
+    field_class = forms.NullBooleanField
+
+    def filter(self, qs, value):
+        if value is not None:
+            self.is_used = True
+            return qs.filter(**{self.name: value})
+        return qs
 
 class ChoiceFilter(Filter):
     field_class = forms.ChoiceField
@@ -259,6 +268,18 @@ class DateRangeFilter(ChoiceFilter):
             value = ''
         return self.options[value][1](qs, self.name)
 
+class DateOffsetFilter(Filter):
+    field_class = DateOffsetField
+    
+    def __init__(self, direction='past', *args, **kwargs):
+        self.direction = direction
+        kwargs['widget'] = widgets.DateOffsetWidget(direction=direction)
+        super().__init__(*args, **kwargs)
+    
+    def filter(self, qs, value):
+        directions = {'past':{'%s__gte' % self.name: _truncate(now() - timedelta(days=value[0]*value[1]))},
+                      'future':{'%s__lt' % self.name: _truncate(now() + timedelta(days=value[0]*value[1]))}}
+        return qs.filter(**directions[self.direction])
 
 class AllValuesFilter(ChoiceFilter):
     @property

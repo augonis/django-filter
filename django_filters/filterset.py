@@ -33,7 +33,7 @@ except ImportError:  # pragma: nocover
     from django.db.models.fields.related import ForeignObjectRel
 
 
-from .filters import (Filter, CharFilter, BooleanFilter,
+from .filters import (Filter, CharFilter, BooleanFilter, NullBooleanFilter,
     ChoiceFilter, DateFilter, DateTimeFilter, TimeFilter, ModelChoiceFilter,
     ModelMultipleChoiceFilter, NumberFilter)
 
@@ -167,9 +167,6 @@ class FilterSetOptions(object):
         self.update({'form':forms.Form, 'model':None, 'fields':None, 'exclude':None, 'order_by':False, 'together':None})#defaults
         self.update(options)
     
-    def _setOption(self, options, name, default=None):
-        setattr(self, name, getattr(options, name, None) or getattr(self, name, default))
-    
     def update(self, options):
         if not options: return
         if not hasattr(options, 'items'):
@@ -292,7 +289,7 @@ FILTER_FOR_DBFIELD_DEFAULTS = {
         'filter_class': NumberFilter,
     },
     models.NullBooleanField: {
-        'filter_class': BooleanFilter,
+        'filter_class': NullBooleanFilter,
     },
     models.SlugField: {
         'filter_class': CharFilter,
