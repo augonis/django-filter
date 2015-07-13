@@ -15,7 +15,7 @@ try:
 except:  # pragma: nocover
     from django.utils.encoding import force_unicode as force_text  # noqa
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext as _, ugettext_lazy as __
 
 
 class LinkWidget(forms.Widget):
@@ -125,7 +125,7 @@ class BooleanSelect(forms.Select):
                 False: False}.get(value, None)
 
 class DateOffsetWidget(forms.Select):
-    directions = {'past':_('last'), 'future':_('next')}
+    directions = {'past':__('last'), 'future':__('next')}
     def __init__(self, attrs=None, direction='past'):
         choices = ('', _('unit')), (1, _('days')), (7, _('weeks')), (30, _('months')), (365, _('years'))
         self.direction = direction
