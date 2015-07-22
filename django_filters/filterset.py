@@ -192,7 +192,7 @@ class FilterSetMetaclass(type):
         opts = FilterSetOptions()
         for parent in parents:
             opts.update(parent._meta.__dict__)
-        opts.update(attrs.pop('Meta', None))
+        opts.update(attrs.get('Meta', None))
         
         new_class = super(
             FilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
